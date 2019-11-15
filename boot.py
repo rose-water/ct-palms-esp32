@@ -19,7 +19,7 @@ yourWifiPassword = WIFI_PW
 myMqttClient     = "brazil-palm-01"
 adafruitUsername = ADAFRUIT_USERNAME
 adafruitAioKey   = ADAFRUIT_PW
-adafruitFeed     = adafruitUsername + "/feeds/testTopic"
+adafruitFeed     = adafruitUsername + "/feeds/brazil-palm-01"
 adafruitIoUrl    = "io.adafruit.com"
 
 # MQTT
