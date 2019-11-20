@@ -2,6 +2,7 @@ import network
 import time
 import machine
 import network
+import ujson
 
 from umqtt.simple import MQTTClient
 
@@ -24,6 +25,26 @@ adafruitIoUrl    = "io.adafruit.com"
 
 # MQTT
 client = MQTTClient(myMqttClient, adafruitIoUrl, 0, adafruitUsername, adafruitAioKey)
+
+# Countries/Cities
+# This is an ugly way to do this
+
+# locations = [
+#                "Philippines" : [
+#                                  { "name" : "Manila",
+#                                    "lat" : "<some latitude>" 
+#                                    "long" : "<some longitude>"
+#                                  },
+#                                  ...
+#                                 ],
+#                ...
+#              ] 
+
+# locations = ["Philippines", "Japan", "India", "Spain", "Germany"]
+# locations[0] = 
+# locations[1] = {}
+# locations[2] = {}
+# locations[3] = {}
 
 # ---------------------------------------------------------------
 def init():
