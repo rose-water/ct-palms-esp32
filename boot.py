@@ -3,6 +3,7 @@ import time
 import machine
 import network
 import ujson
+import ssd1306
 
 from umqtt.simple import MQTTClient
 
@@ -22,6 +23,10 @@ adafruitUsername = ADAFRUIT_USERNAME
 adafruitAioKey   = ADAFRUIT_PW
 adafruitFeed     = adafruitUsername + "/feeds/brazil-palm-01"
 adafruitIoUrl    = "io.adafruit.com"
+
+# OLED Display
+i2c = machine.I2C(scl=machine.Pin(22), sda=machine.Pin(23), freq = 100000)
+oled = ssd1306.SSD1306_I2C(128, 32, i2c)
 
 # MQTT
 client = MQTTClient(myMqttClient, adafruitIoUrl, 0, adafruitUsername, adafruitAioKey)
@@ -49,6 +54,7 @@ client = MQTTClient(myMqttClient, adafruitIoUrl, 0, adafruitUsername, adafruitAi
 # ---------------------------------------------------------------
 def init():
   connectToWifi()
+  initDisplay()
   client.set_callback(sub_cb)
   client.connect()
   client.subscribe(bytes(adafruitFeed,'utf-8'))
@@ -80,6 +86,16 @@ def sub_cb(topic, msg):
   # value = str(msg,'utf-8')
   print((topic, msg))
 
+
+# ---------------------------------------------------------------
+def initDisplay():
+  print("initDisplay called.")
+  oled.init_display()
+  oled.fill(0)
+  oled.text("text line 1", 0, 0)
+  oled.text("text line 2", 0, 10)
+  oled.text("text line 3", 0, 20)
+  oled.show()
 
 # ---------------------------------------------------------------
 init()
