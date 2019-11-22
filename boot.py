@@ -38,27 +38,12 @@ oled     = ssd1306.SSD1306_I2C(128, 32, i2c)
 # MQTT
 client = MQTTClient(myMqttClient, adafruitIoUrl, 0, adafruitUsername, adafruitAioKey)
 
-# DO NOT DELETE
-# Might need if we move interface to OLED
-# Countries/Cities
-# This is an ugly way to do this
-
-# locations = [
-#                "Philippines" : [
-#                                  { "name" : "Manila",
-#                                    "lat" : "<some latitude>" 
-#                                    "long" : "<some longitude>"
-#                                  },
-#                                  ...
-#                                 ],
-#                ...
-#              ] 
-
-# locations = ["Philippines", "Japan", "India", "Spain", "Germany"]
-# locations[0] = 
-# locations[1] = {}
-# locations[2] = {}
-# locations[3] = {}
+# Sample location data
+countries = [
+  "United States",
+  "Japan",
+  "Germany"
+]
 
 # ---------------------------------------------------------------
 def init():
@@ -68,16 +53,20 @@ def init():
   client.connect()
   client.subscribe(bytes(adafruitFeed,'utf-8'))
 
+  isConversationHappening = False
+
   while True:
-    # Not sure if we need potentiometer
-    # print("pot: " + str(adc1.read()))
 
-    print(touchPin.read())
-
-    if touchPin.read() <= 300:
+    if touchPin.read() <= 300 and isConversationHappening == False:
       initNewConversation()
-    else:
-      print("no touch happening")
+      isConversationHappening = True
+
+    # This interaction is kind of complicated to do on the OLED...
+    # So it's still on the phone.
+    if isConversationHappening == True:
+      # print("pot: " + str(adc1.read()))
+      cityIndex = translate(adc1.read(), 0, 4095, 0, 2)
+      print("current city is: " + countries[cityIndex])
 
     # Non-blocking wait for message
     try:
@@ -100,7 +89,7 @@ def connectToWifi():
 
     # could hang the device if run with connect() on boot
     while not sta_if.isconnected():
-        pass
+      pass
 
   print("Connected to WiFi.")
   print('Network config:', sta_if.ifconfig())
@@ -150,6 +139,20 @@ def respondToLocation(location):
   oled.text("someone from", 0, 10)
   oled.text(location + ("!"), 0, 20)
   oled.show()
+
+
+# ------------------------------------------------------------
+# https://stackoverflow.com/questions/1969240/mapping-a-range-of-values-to-another
+def translate(value, leftMin, leftMax, rightMin, rightMax):
+  # Figure out how 'wide' each range is
+  leftSpan = leftMax - leftMin
+  rightSpan = rightMax - rightMin
+
+  # Convert the left range into a 0-1 range (float)
+  valueScaled = float(value - leftMin) / float(leftSpan)
+
+  # Convert the 0-1 range into a value in the right range.
+  return rightMin + int(valueScaled * rightSpan)
 
 
 # ---------------------------------------------------------------
