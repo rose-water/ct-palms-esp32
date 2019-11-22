@@ -24,9 +24,17 @@ adafruitAioKey   = ADAFRUIT_PW
 adafruitFeed     = adafruitUsername + "/feeds/brazil-palm-01"
 adafruitIoUrl    = "io.adafruit.com"
 
+# Pots
+adc1 = machine.ADC(machine.Pin(34))
+adc1.atten(machine.ADC.ATTN_11DB)
+
+# Button (demo only)
+buttonPin27 = machine.Pin(27, machine.Pin.IN)
+
 # OLED Display
-i2c = machine.I2C(scl=machine.Pin(22), sda=machine.Pin(23), freq = 100000)
-oled = ssd1306.SSD1306_I2C(128, 32, i2c)
+i2c      = machine.I2C(scl=machine.Pin(22), sda=machine.Pin(23), freq = 100000)
+oled     = ssd1306.SSD1306_I2C(128, 32, i2c)
+
 
 # MQTT
 client = MQTTClient(myMqttClient, adafruitIoUrl, 0, adafruitUsername, adafruitAioKey)
@@ -60,9 +68,17 @@ def init():
   client.subscribe(bytes(adafruitFeed,'utf-8'))
 
   while True:
+    # print("pot: " + str(adc1.read()))
+    
+    if buttonPin27.value() == 1:
+      initNewConversation()
+
     # Non-blocking wait for message
-    client.check_msg()
-    time.sleep(1)
+    try:
+      client.check_msg()
+
+    finally:
+      time.sleep(1)
   
   client.disconnect()
 
@@ -83,19 +99,48 @@ def connectToWifi():
 # ---------------------------------------------------------------
 # Callback for received messages on subbed topic
 def sub_cb(topic, msg):
-  # value = str(msg,'utf-8')
-  print((topic, msg))
+  location = str(msg,'utf-8')
+  # print((topic, location))
+  respondToLocation(location)
 
 
 # ---------------------------------------------------------------
 def initDisplay():
-  print("initDisplay called.")
+  print("Initializing display.")
   oled.init_display()
   oled.fill(0)
-  oled.text("text line 1", 0, 0)
-  oled.text("text line 2", 0, 10)
-  oled.text("text line 3", 0, 20)
+  oled.text("Hello! To chat", 0, 0)
+  oled.text("with me, give", 0, 10)
+  oled.text("me a hug.", 0, 20)
   oled.show()
+
+
+# ---------------------------------------------------------------
+def initNewConversation():
+  print("Starting new conversation.")
+  oled.fill(0)
+  oled.text("Hi there! I'm an", 0, 0)
+  oled.text("LA palm tree ", 0, 10)
+  oled.text("from Brazil...", 0, 20)
+  oled.show()
+
+  time.sleep(4)
+  oled.fill(0)
+  oled.text("Tell me where", 0, 0)
+  oled.text("you're from!", 0, 10)
+  oled.text("<url here>", 0, 20)
+  oled.show()
+
+
+# ---------------------------------------------------------------
+def respondToLocation(location):
+  print("Responding to location...")
+  oled.fill(0)
+  oled.text("Nice to meet", 0, 0)
+  oled.text("someone from", 0, 10)
+  oled.text(location + ("!"), 0, 20)
+  oled.show()
+
 
 # ---------------------------------------------------------------
 init()
