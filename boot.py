@@ -28,17 +28,18 @@ adafruitIoUrl    = "io.adafruit.com"
 adc1 = machine.ADC(machine.Pin(34))
 adc1.atten(machine.ADC.ATTN_11DB)
 
-# Button (demo only)
-buttonPin27 = machine.Pin(27, machine.Pin.IN)
+# Touch pins
+touchPin = machine.TouchPad(machine.Pin(15))
 
 # OLED Display
 i2c      = machine.I2C(scl=machine.Pin(22), sda=machine.Pin(23), freq = 100000)
 oled     = ssd1306.SSD1306_I2C(128, 32, i2c)
 
-
 # MQTT
 client = MQTTClient(myMqttClient, adafruitIoUrl, 0, adafruitUsername, adafruitAioKey)
 
+# DO NOT DELETE
+# Might need if we move interface to OLED
 # Countries/Cities
 # This is an ugly way to do this
 
@@ -68,10 +69,15 @@ def init():
   client.subscribe(bytes(adafruitFeed,'utf-8'))
 
   while True:
+    # Not sure if we need potentiometer
     # print("pot: " + str(adc1.read()))
-    
-    if buttonPin27.value() == 1:
+
+    print(touchPin.read())
+
+    if touchPin.read() <= 300:
       initNewConversation()
+    else:
+      print("no touch happening")
 
     # Non-blocking wait for message
     try:
@@ -91,6 +97,10 @@ def connectToWifi():
     print('connecting to network...')
     sta_if.active(True)
     sta_if.connect(yourWifiSSID, yourWifiPassword)
+
+    # could hang the device if run with connect() on boot
+    while not sta_if.isconnected():
+        pass
 
   print("Connected to WiFi.")
   print('Network config:', sta_if.ifconfig())
