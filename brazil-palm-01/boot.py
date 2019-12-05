@@ -1,8 +1,10 @@
+# ---------------------------------------------------------------
+# brazil-palm-01
+# ---------------------------------------------------------------
 import network
 import time
 import machine
 import network
-import ujson
 import ssd1306
 
 from umqtt.simple import MQTTClient
@@ -24,12 +26,11 @@ adafruitAioKey   = ADAFRUIT_PW
 adafruitFeed     = adafruitUsername + "/feeds/brazil-palm-01"
 adafruitIoUrl    = "io.adafruit.com"
 
-# Pots
-adc1 = machine.ADC(machine.Pin(34))
-adc1.atten(machine.ADC.ATTN_11DB)
-
 # Touch pins
 touchPin = machine.TouchPad(machine.Pin(15))
+
+# Solenoid pin
+solenoidPin33 = machine.Pin(33, machine.Pin.OUT)
 
 # OLED Display
 i2c      = machine.I2C(scl=machine.Pin(22), sda=machine.Pin(23), freq = 100000)
@@ -37,13 +38,6 @@ oled     = ssd1306.SSD1306_I2C(128, 32, i2c)
 
 # MQTT
 client = MQTTClient(myMqttClient, adafruitIoUrl, 0, adafruitUsername, adafruitAioKey)
-
-# Sample location data
-countries = [
-  "United States",
-  "Japan",
-  "Germany"
-]
 
 # ---------------------------------------------------------------
 def init():
@@ -56,17 +50,10 @@ def init():
   isConversationHappening = False
 
   while True:
-
+    
     if touchPin.read() <= 300 and isConversationHappening == False:
       initNewConversation()
       isConversationHappening = True
-
-    # This interaction is kind of complicated to do on the OLED...
-    # So it's still on the phone.
-    if isConversationHappening == True:
-      # print("pot: " + str(adc1.read()))
-      cityIndex = translate(adc1.read(), 0, 4095, 0, 2)
-      print("current city is: " + countries[cityIndex])
 
     # Non-blocking wait for message
     try:
@@ -98,19 +85,29 @@ def connectToWifi():
 # ---------------------------------------------------------------
 # Callback for received messages on subbed topic
 def sub_cb(topic, msg):
-  location = str(msg,'utf-8')
-  # print((topic, location))
-  respondToLocation(location)
+  print(topic, msg)
+  value = str(msg,'utf-8')
 
+  if value == "hello_behavior":
+    print("value is hello_behavior")
+
+    for i in range(6):
+      solenoidPin33.value(1)
+      time.sleep(0.2)
+      solenoidPin33.value(0)
+      time.sleep(0.2)
+  
+  else: 
+    print("value is some other thing")
+    
 
 # ---------------------------------------------------------------
 def initDisplay():
   print("Initializing display.")
   oled.init_display()
   oled.fill(0)
-  oled.text("Hello! To chat", 0, 0)
-  oled.text("with me, give", 0, 10)
-  oled.text("me a hug.", 0, 20)
+  oled.text("........", 0, 0)
+  oled.text("Shake my hand!", 0, 10)
   oled.show()
 
 
@@ -118,26 +115,9 @@ def initDisplay():
 def initNewConversation():
   print("Starting new conversation.")
   oled.fill(0)
-  oled.text("Hi there! I'm an", 0, 0)
-  oled.text("LA palm tree ", 0, 10)
-  oled.text("from Brazil...", 0, 20)
-  oled.show()
-
-  time.sleep(4)
-  oled.fill(0)
-  oled.text("Tell me where", 0, 0)
-  oled.text("you're from!", 0, 10)
-  oled.text("<url here>", 0, 20)
-  oled.show()
-
-
-# ---------------------------------------------------------------
-def respondToLocation(location):
-  print("Responding to location...")
-  oled.fill(0)
-  oled.text("Nice to meet", 0, 0)
-  oled.text("someone from", 0, 10)
-  oled.text(location + ("!"), 0, 20)
+  oled.text("10.60.6.140:3000", 0, 0)
+  oled.text("/chat?palmId=", 0, 10)
+  oled.text("brazil-palm-01", 0, 20)
   oled.show()
 
 
